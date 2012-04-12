@@ -1,0 +1,9 @@
+Hickerspace REST-API
+
+Provided information:
+* Space status
+
+Instructions:
+* configure conf.php to fit your needs
+* replace {WWW-DIRECTORY}-placeholder in php-files with your www-directory
+* grant write access for room/room_status.txt
