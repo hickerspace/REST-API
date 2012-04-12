@@ -1,0 +1,13 @@
+DirectoryIndex index.php index.json
+Options -Indexes
+ErrorDocument 404 "<b>404 Not Found</b><br><br>Ressource nicht verf&uuml;gbar. Bitte <a href=\"http://hickerspace.org/wiki/REST-API\">Dokumentation</a> konsultieren."
+ErrorDocument 403 "<b>403 Forbidden</b><br><br>Ressource nicht verf&uuml;gbar. Bitte <a href=\"http://hickerspace.org/wiki/REST-API\">Dokumentation</a> konsultieren."
+<Files ~ "\.(txt)$">
+  order allow,deny
+  deny from all
+</Files>
+<Files ~ "(conf.php)$">
+  order allow,deny
+  deny from all
+</Files>
+
