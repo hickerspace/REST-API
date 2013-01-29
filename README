@@ -1,9 +1,4 @@
-Hickerspace REST-API
+Notes:
 
-Provided information:
-* Space status
-
-Instructions:
-* configure conf.php to fit your needs
-* replace {WWW-DIRECTORY}-placeholder in php-files with your www-directory
-* grant write access for room/room_status.txt
+Enable WSGIPassAuthorization to pass through authorisation headers:
+http://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization
