@@ -1,11 +1,11 @@
 from flask import Flask, url_for, request, jsonify
 from auth import requires_auth
-import logging
+from misc import parameters_given
+from logger import log
+import info, announce, room
+import os
 
 app = Flask(__name__)
-file_handler = logging.FileHandler('hickerspace.org/wsgi-scripts/restapi/restapi.log')
-app.logger.addHandler(file_handler)
-app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def api_root():
@@ -13,55 +13,27 @@ def api_root():
 
 @app.route('/info')
 def api_info():
-	message = {
-		'api': '0.12',
-		'space': 'Hickerspace',
-		'url': 'https://hickerspace.org',
-		'icon': {
-					'open': 'https://hickerspace.org/images/open.png',
-					'closed': 'https://hickerspace.org/images/closed.png'
-				},
-		'address': 'Kulturfabrik Loeseke (Projektwerkstatt), Langer Garten 1, 31137 Hildesheim, Germany',
-		'contact': {
-						'irc': 'irc://irc.freenode.net:6667/#hickerspace',
-						'twitter': '@hickernews',
-						'jabber': 'hick@conference.hickerspace.org'
-					},
-		'logo': 'https://hickerspace.org/images/hickerspace.png',
-		'open': '$open',
-		'lastchange': '$since',
-		'lat': 52.16175,
-		'lon': 9.957776,
-		'feeds': [
-					{
-						'name': 'News via Twitter',
-						'type': 'application/rss+xml',
-						'url': 'http://api.twitter.com/1/statuses/user_timeline.rss?screen_name=hickernews'
-					},
-					{	'name': 'New Wiki Articles',
-						'type': 'application/rss+xml',
-						'url': 'https://hickerspace.org/wiki/New.xml'
-					},
-					{	'name': 'Wiki Articles Updated Lately',
-						'type': 'application/rss+xml',
-						'url': 'https://hickerspace.org/wiki/Updated.xml'
-					},
-					{	'name': 'Wiki Articles in Userspace Updated Lately',
-						'type': 'application/rss+xml',
-						'url': 'https://hickerspace.org/wiki/Userspace.xml'
-					},
-					{	'name': 'Wiki Articles Discussed Lately',
-						'type': 'application/rss+xml',
-						'url': 'https://hickerspace.org/wiki/Discussion.xml'
-					}
-				]
-			}
-	return jsonify(message)
+	return jsonify(info.info())
 
-@app.route('/articles/<articleid>')
+@app.route('/announce')
 @requires_auth
-def api_article(articleid):
-	return 'You are reading ' + articleid
+@parameters_given(['lang', 'text'])
+def api_announce():
+	lang = request.args.get('lang')
+	text = request.args.get('text')
+	return announce.announce(lang, text)
+
+@app.route('/room')
+def api_room():
+	return jsonify(room.getStatus())
+
+@app.route('/submit-room')
+@requires_auth
+@parameters_given(['people'])
+def api_submit_room():
+	people = request.args.get('people')
+	return room.submitStatus(people)
+
 
 if __name__ == '__main__':
 	app.run()

@@ -1,9 +1,13 @@
 from functools import wraps
 from flask import request, jsonify
-from conf import username, password
+from conf import *
 
-def check_auth(user, pw):
-	return user == username and pw == password
+def check_auth(username, password):
+	for user, pw in API_ACCESS:
+		if username == user and password == pw:
+			return True
+
+	return False
 
 def authenticate(msg='Authenticate.'):
 	resp = jsonify({'message': msg})
@@ -23,7 +27,7 @@ def requires_auth(f):
 			return resp
 
 		auth = request.authorization
-		if not auth: 
+		if not auth:
 			return authenticate()
 
 		elif not check_auth(auth.username, auth.password):
