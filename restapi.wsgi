@@ -1,4 +1,6 @@
 import sys
-sys.path.insert(0, "/var/www/hickerspace.org/wsgi-scripts/restapi")
+import * from conf
+
+sys.path.insert(0, API_PATH)
 
 from restapi import app as application

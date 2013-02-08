@@ -1,5 +1,5 @@
 # path to REST API files
-PATH = "/home/user/restapi"
+API_PATH = "/home/user/restapi"
 # access tuples
 API_ACCESS = [ ("api-user", "APIKEY") ]
 # after this number of minutes, the room will be automatically marked as "closed"
@@ -15,4 +15,4 @@ EVENT_PEOPLE_LIMIT = 1
 # people needed to open the room on normal days
 PEOPLE_LIMIT = 3
 # file to save room status in
-ROOM_STATUS_FILE = PATH + "/data/room_status.json"
+ROOM_STATUS_FILE = API_PATH + "/data/room_status.json"
