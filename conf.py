@@ -16,3 +16,14 @@ EVENT_PEOPLE_LIMIT = 1
 PEOPLE_LIMIT = 3
 # file to save room status in
 ROOM_STATUS_FILE = API_PATH + "/data/room_status.json"
+# jabber info for status user
+JABBER_SERVER = "hickerspace.org"
+JABBER_USER = "checkMUCuser"
+JABBER_PASSWORD = "password"
+# muc info
+JABBER_MUC = "hick"
+JABBER_MUC_SERVER = "conference.hickerspace.org"
+# temprary announce file location
+ANNOUNCE_DL = "downloadable.mp3"
+# where to get announcements initally
+ESPEAK_FILE = "announce.mp3"

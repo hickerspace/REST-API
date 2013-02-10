@@ -13,11 +13,13 @@ def info():
 		'contact': {
 						'irc': 'irc://irc.freenode.net:6667/#hickerspace',
 						'twitter': '@hickernews',
-						'jabber': 'hick@conference.hickerspace.org'
+						'jabber': 'hick@conference.hickerspace.org',
+						'email': 'kontakt@hickerspace.org',
+						'ml': 'hickerspace@hickerspace.org'
 					},
 		'logo': 'https://hickerspace.org/images/hickerspace.png',
 		'open': room.isRoomOpen(),
-		'lastchange': room.getStatus(),
+		'lastchange': room.getStatus()['since'],
 		'lat': 52.16175,
 		'lon': 9.957776,
 		'feeds': [

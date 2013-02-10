@@ -2,6 +2,9 @@ from functools import wraps
 from flask import request, jsonify
 from conf import *
 
+"""
+Simple method to check API credentials
+"""
 def check_auth(username, password):
 	for user, pw in API_ACCESS:
 		if username == user and password == pw:
@@ -9,6 +12,11 @@ def check_auth(username, password):
 
 	return False
 
+"""
+Basic authentication for protected resources.
+Source: "HTTP Basic Auth" by Armin Ronacher
+		http://flask.pocoo.org/snippets/8/
+"""
 def authenticate(msg='Authenticate.'):
 	resp = jsonify({'message': msg})
 	resp.status_code = 401
@@ -16,12 +24,18 @@ def authenticate(msg='Authenticate.'):
 
 	return resp
 
+"""
+Basic authentication for protected resources and SSL enforcement.
+Source: "HTTP Basic Auth" by Armin Ronacher
+		http://flask.pocoo.org/snippets/8/
+"""
+
 def requires_auth(f):
 	@wraps(f)
 	def decorated(*args, **kwargs):
 		# require ssl for api requests with auth
 		if "https://" not in request.url:
-			message = {'message': 'Resouces requiring authentication also require ssl.'}
+			message = {'message': 'Resources requiring authentication also require ssl.'}
 			resp = jsonify(message)
 			resp.status_code = 403
 			return resp

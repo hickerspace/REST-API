@@ -1,8 +1,9 @@
-from flask import Flask, url_for, request, jsonify
+from flask import Flask, url_for, request, jsonify, redirect
 from auth import requires_auth
 from misc import parameters_given
 from logger import log
-import info, announce, room
+import info, longpolling, room, muc
+from conf import *
 import os
 
 app = Flask(__name__)
@@ -21,7 +22,7 @@ def api_info():
 def api_announce():
 	lang = request.args.get('lang')
 	text = request.args.get('text')
-	return announce.announce(lang, text)
+	return longpolling.announce(lang, text)
 
 @app.route('/room')
 def api_room():
@@ -33,6 +34,28 @@ def api_room():
 def api_submit_room():
 	people = request.args.get('people')
 	return room.submitStatus(people)
+
+@app.route('/muc')
+def api_muc():
+	return jsonify(muc.mucStatus())
+
+@app.route('/wiki/new')
+def api_wiki_new():
+	return redirect('http://hickerspace.org/wiki/New.json')
+
+@app.route('/wiki/userspace')
+def api_wiki_userspace():
+	return redirect('http://hickerspace.org/wiki/Userspace.json')
+
+@app.route('/wiki/updated')
+def api_wiki_updated():
+	return redirect('http://hickerspace.org/wiki/Updated.json')
+
+@app.route('/long-polling')
+@requires_auth
+def api_long_polling():
+	return longpolling.longPolling()
+
 
 
 if __name__ == '__main__':

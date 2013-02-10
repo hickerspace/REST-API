@@ -1,6 +1,9 @@
 from functools import update_wrapper
 from flask import request, jsonify
 
+"""
+Checks if given parameters are available as GET or POST variables.
+"""
 def parameters_given(params):
 	def decorator(fn):
 		def wrapped_function(*args, **kwargs):
