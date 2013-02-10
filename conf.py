@@ -1,5 +1,5 @@
 # path to REST API files
-API_PATH = "/home/user/restapi"
+API_PATH = os.path.abspath(os.path.dirname(__file__))
 # access tuples
 API_ACCESS = [ ("api-user", "APIKEY") ]
 # after this number of minutes, the room will be automatically marked as "closed"
