@@ -6,10 +6,16 @@ Overview
 * room status (for SpaceAPI etc.)
 * extended information about our hackspace
 * audio announcement system via long polling
-* LED ticker via long polling (still to come)
+* LED ticker via long polling
 * Mate-O-Meter (still to come)
 * MUC (xmpp) status
 * Wiki status (just redirects)
+
+Dependencies
+============
+
+* flask
+* [ledticker.py](https://github.com/hickerspace/ledticker/blob/master/ledticker.py)
 
 Notes
 =====

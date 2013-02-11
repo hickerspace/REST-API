@@ -2,6 +2,7 @@ from flask import jsonify, send_from_directory
 from logger import log
 import os
 import time
+import ledticker
 from conf import *
 
 """
@@ -37,11 +38,16 @@ necessary due to our network situation: Incoming connections are not
 possible, because of the inability to create port forwardings.
 """
 def longPolling():
-	# ledticker check belongs here
-	while not os.path.exists(API_PATH+'/'+ESPEAK_FILE):
+	ticker = ledticker.LedTicker(API_PATH + "/data/ledticker.txt")
+
+	while not os.path.exists(API_PATH+'/'+ESPEAK_FILE) and ticker.items_available() == 0:
 		time.sleep(1)
 
-	if os.path.exists(API_PATH+'/'+ESPEAK_FILE):
+	if ticker.items_available() != 0:
+		# return new ticker messages if available
+		return ticker.get_output()
+
+	elif os.path.exists(API_PATH+'/'+ESPEAK_FILE):
+		# return new announcements (as mp3s) if available
 		return serveAnnouncement()
 
-	# ..and here

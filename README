@@ -1,6 +1,0 @@
-Python (flask) implementation of our REST-API.
-
-Notes:
-
-* Enable WSGIPassAuthorization to pass through authorisation headers:
-http://code.google.com/p/modwsgi/wiki/ConfigurationDirectives#WSGIPassAuthorization
