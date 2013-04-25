@@ -10,23 +10,22 @@ Check if enough people are avaiable depending on weekday and time to mark the ro
 This method can be called with datetime object or unix timestamp.
 """
 def determineStatus(openingTime, people):
-	if isinstance(openingTime, float):
+	if isinstance(openingTime, float) or isinstance(openingTime, (int, long)):
 		openingTime = datetime.fromtimestamp(openingTime)
 
 	status = openingTime > (datetime.now() - timedelta(minutes=ROOM_TIMEOUT))
 
 	openNights = []
 	for eventWeekday in EVENT_WEEKDAYS:
-		openNights.append((openingTime.weekday == eventWeekday and openingTime.hour >= MEET_HOUR_BEGIN) \
-			or (openingTime.weekday == eventWeekday + 1 and openingTime.hour <= MEET_HOUR_END))
+		openNights.append((openingTime.weekday() == eventWeekday and openingTime.hour >= MEET_HOUR_BEGIN) \
+			or (openingTime.weekday() == eventWeekday + 1 and openingTime.hour <= MEET_HOUR_END))
 
-	enoughPeople = (any(openNights) and EVENT_PEOPLE_LIMIT) or people >= PEOPLE_LIMIT
+	enoughPeople = (any(openNights) and people > EVENT_PEOPLE_LIMIT) or people >= PEOPLE_LIMIT
 
 	return status and enoughPeople
 
 """
 JSON output for /room.
-FIXME: output some kind of JSON error status if errors occurr.
 """
 def getStatus():
 	try:
@@ -47,6 +46,10 @@ def getStatus():
 
 	except IOError:
 		log.exception("Could not read %s." % ROOM_STATUS_FILE)
+		message = { 'success': False, 'status': 'Room status record unreadable.' }
+		resp = jsonify(message)
+		resp.status_code = 500
+		return resp
 	else:
 		f.close()
 
@@ -64,6 +67,10 @@ def isRoomOpen():
 			return False
 	except IOError:
 		log.exception("Could not read %s." % ROOM_STATUS_FILE)
+		message = { 'success': False, 'status': 'Room status record unreadable.' }
+		resp = jsonify(message)
+		resp.status_code = 500
+		return resp
 	else:
 		f.close()
 
@@ -77,7 +84,7 @@ def getMuninStatus():
 		roomInternal = simplejson.loads(f.read())
 
 		if determineStatus(roomInternal['lastOpenSignal'], roomInternal['people']):
-			people = roomInternal['people']
+			people = int(roomInternal['people'])
 		else:
 			people = 0
 
@@ -85,6 +92,7 @@ def getMuninStatus():
 
 	except IOError:
 		log.exception("Could not read %s." % ROOM_STATUS_FILE)
+		return 'room.value 0'
 	else:
 		f.close()
 
@@ -122,5 +130,8 @@ def submitStatus(people):
 
 	except IOError:
 		log.exception("Could not read/write %s." % ROOM_STATUS_FILE)
-		return jsonify({ 'success': False })
+		message = { 'success': False, 'status': 'Room status record unwriteable/unreadable.' }
+		resp = jsonify(message)
+		resp.status_code = 500
+		return resp
 
