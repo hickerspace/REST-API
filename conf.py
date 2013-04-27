@@ -42,6 +42,9 @@ MATE_FILE = "%s/data/mate.json" % API_PATH
 # stores ledticker messages
 LEDTICKER_FILE = "%s/data/ledticker.txt" % API_PATH
 
+# stores expanded twitter urls
+EXPANDED_URLS = "%s/data/expanded_urls.json" % API_PATH
+
 # location of the espeak script
 ESPEAK_LOCATION = "%s/data/espeak/espeak.sh" % API_PATH
 
@@ -56,3 +59,9 @@ JABBER_PASSWORD = "JABBERPASSWORD"
 # muc info
 JABBER_MUC = "hick"
 JABBER_MUC_SERVER = "conference.hickerspace.org"
+
+# twitter credentials
+TWIT_CONSUMER_KEY = "CONSUMERKEY"
+TWIT_CONSUMER_SECRET = "CONSUMERKEYSECRET"
+TWIT_ACCESS_TOKEN = "ACCESSTOKEN"
+TWIT_ACCESS_TOKEN_SECRET = "ACCESSTOKENSECRET"

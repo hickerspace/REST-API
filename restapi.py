@@ -7,12 +7,14 @@ from auth import requires_auth
 from httpaccesscontrol import crossdomain
 from misc import parameters_given, getParam, paramExists, isTrue, error405, error504, getStatus, setStatus
 from logger import log
-import info, room, ledticker, announce
+import info, room, ledticker, announce, twitterfeed
 from os import stat
 import datetime
+from flask.ext.cache import Cache
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
+cache = Cache(app, config={'CACHE_TYPE': 'simple', 'CACHE_THRESHOLD': 10})
 
 # events that get fired when new data is available
 announceEvent = Event()
@@ -33,14 +35,14 @@ def internal_server_error(e):
 """
 API methods
 """
-@app.route('/rest')
+@app.route('/api')
 def api_root():
 	return render_template('welcome.html')
 
 """
 Submit new audio announcements.
 """
-@app.route('/rest/announce', methods=['POST'])
+@app.route('/api/announce', methods=['POST'])
 @requires_auth()
 @parameters_given(['lang', 'text'])
 def api_announce():
@@ -55,7 +57,7 @@ def api_announce():
 """
 Submit/get traffic light status information.
 """
-@app.route('/rest/ampel', methods=['GET', 'POST'])
+@app.route('/api/ampel', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 @requires_auth(True)
 @parameters_given(['red', 'yellow', 'green'])
@@ -90,7 +92,7 @@ def api_ampel():
 """
 Submit/get Mate-O-Meter status information.
 """
-@app.route('/rest/mate-o-meter', methods=['GET', 'POST'])
+@app.route('/api/mate-o-meter', methods=['GET', 'POST'])
 @crossdomain(origin='*')
 @requires_auth(True)
 @parameters_given(['bottles'])
@@ -116,7 +118,7 @@ def api_mateometer():
 """
 Long polling method for audio announcements (private method).
 """
-@app.route('/rest/poll/announce')
+@app.route('/api/poll/announce')
 @requires_auth()
 def api_poll_announce():
 	announceEvent.wait(REQUEST_TIMEOUT)
@@ -125,7 +127,7 @@ def api_poll_announce():
 """
 Long polling method for ledticker updates (private method).
 """
-@app.route('/rest/poll/ledticker')
+@app.route('/api/poll/ledticker')
 @requires_auth()
 def api_poll_ledticker():
 	ticker = ledticker.LedTicker(LEDTICKER_FILE)
@@ -141,7 +143,7 @@ def api_poll_ledticker():
 """
 Long polling method for traffic light updates.
 """
-@app.route('/rest/poll/ampel')
+@app.route('/api/poll/ampel')
 @crossdomain(origin='*')
 def api_poll_ampel():
 	flag = ampelEvent.wait(REQUEST_TIMEOUT)
@@ -152,39 +154,42 @@ def api_poll_ampel():
 """
 Submit ledticker updates and convert text messages to ledticker messages.
 """
-@app.route('/rest/ledticker', methods=['GET', 'POST'])
+@app.route('/api/ledticker', methods=['POST'])
 @requires_auth()
 @parameters_given(['text'])
 def api_ledticker():
+	"""
 	if request.method == 'GET':
 		text = request.args.get('text', '')
 		ticker = ledticker.LedTicker()
 		ticker.add_item(text)
 		return ticker.get_output()
 
-	elif request.method == 'POST':
-		text = getParam('text')
-		lowPriority = isTrue(getParam('lowpriority')) if paramExists('lowpriority') else False
+	if request.method == 'POST':
+	"""
 
-		ticker = ledticker.LedTicker(LEDTICKER_FILE)
+	text = getParam('text')
+	lowPriority = isTrue(getParam('lowpriority')) if paramExists('lowpriority') else False
 
-		longAgo = False
-		if lowPriority:
-			mtime = stat(LEDTICKER_FILE).st_mtime
-			longAgo = (datetime.datetime.fromtimestamp(mtime) + datetime.timedelta(seconds=30)) > datetime.datetime.now()
+	ticker = ledticker.LedTicker(LEDTICKER_FILE)
 
-		if not lowPriority or (lowPriority and ticker.items_available() == 0 and longAgo):
-			if not lowPriority:
-				log.info("Received high priority message: %s" % text)
-			ticker.add_item(text)
-			ledtickerEvent.set()
-			ledtickerEvent.clear()
-		return jsonify({ 'success': True })
+	longAgo = False
+	if lowPriority:
+		mtime = stat(LEDTICKER_FILE).st_mtime
+		longAgo = (datetime.datetime.fromtimestamp(mtime) + datetime.timedelta(seconds=30)) < datetime.datetime.now()
+
+	if not lowPriority or (lowPriority and ticker.items_available() == 0 and longAgo):
+		if not lowPriority:
+			log.info("Received high priority message: %s" % text)
+		ticker.add_item(text)
+		ledtickerEvent.set()
+		ledtickerEvent.clear()
+	return jsonify({ 'success': True })
 
 """
 Submit/get room status information.
 """
-@app.route('/rest/room', methods=['GET', 'POST'])
+@app.route('/api/room', methods=['GET', 'POST'])
 @parameters_given(['people'])
 @crossdomain(origin='*')
 @requires_auth(True)
@@ -198,8 +203,8 @@ def api_room():
 """
 Get general information + room status.
 """
-@app.route('/rest/room_extended')
-@app.route('/rest/info')
+@app.route('/api/room_extended')
+@app.route('/api/info')
 @crossdomain(origin='*')
 def api_info():
 	return jsonify(info.info())
@@ -207,7 +212,7 @@ def api_info():
 """
 Get XMPP multi-user chat status info.
 """
-@app.route('/rest/muc', methods=['GET', 'POST'])
+@app.route('/api/muc', methods=['GET', 'POST'])
 @parameters_given(['botOnline', 'mucUsers'])
 @crossdomain(origin='*')
 @requires_auth(True)
@@ -221,19 +226,36 @@ def api_muc():
 		return jsonify(setStatus(MUC_FILE, status))
 
 """
+Hickernews Twitter atom feed.
+"""
+@app.route('/api/twitter/hickernews.atom')
+@cache.cached(timeout=300)
+def api_hickernews_feed():
+	return twitterfeed.getUserTimeline("Hickernews", request.url)
+
+"""
+Hickerspace Twitter atom feed.
+"""
+@app.route('/api/twitter/hickerspace.atom')
+@cache.cached(timeout=300)
+def api_hickerspace_feed():
+	return twitterfeed.getUserTimeline("Hickerspace", request.url)
+
+
+"""
 Wiki resources which should be available also via this API
 """
-@app.route('/rest/wiki/new')
+@app.route('/api/wiki/new')
 @crossdomain(origin='*')
 def api_wiki_new():
 	return redirect('http://hickerspace.org/wiki/New.json')
 
-@app.route('/rest/wiki/userspace')
+@app.route('/api/wiki/userspace')
 @crossdomain(origin='*')
 def api_wiki_userspace():
 	return redirect('http://hickerspace.org/wiki/Userspace.json')
 
-@app.route('/rest/wiki/updated')
+@app.route('/api/wiki/updated')
 @crossdomain(origin='*')
 def api_wiki_updated():
 	return redirect('http://hickerspace.org/wiki/Updated.json')
